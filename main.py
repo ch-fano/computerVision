@@ -1,11 +1,15 @@
 import os
 import shutil
+import random
 from sklearn.model_selection import train_test_split
+from data_augmentation import data_augmentation as DA
 
 # Define the folder name to personalize the script
 img_folder_name = 'img_copy'
 tmp_folder_name = 'tmp_folder'
-base_folder_name = '/home/christofer/Desktop/photos'
+base_folder_name = ''  # your path to the photo
+subdir_l = []  # add your subdir
+
 
 def create_local_copy(src_path):
     if os.path.isdir(src_path):
@@ -70,10 +74,13 @@ def split_dataset():
     annotations.sort()
 
     # Split the dataset into train-valid-test splits
-    train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations, test_size=0.2,
-                                                                                    random_state=1)
+    random_seed = random.randint(0, 10000)
+    train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations,
+                                                                                    test_size=0.2,
+                                                                                    random_state=random_seed)
     val_images, test_images, val_annotations, test_annotations = train_test_split(val_images, val_annotations,
-                                                                                  test_size=0.5, random_state=1)
+                                                                                  test_size=0.5,
+                                                                                  random_state=random_seed)
     create_dataset_folders()
 
     # Move the splits into their folders
@@ -88,7 +95,41 @@ def split_dataset():
     print('---- Dataset successfully splitted ----')
 
 
-def create_dataset(dir_name, subdir_list):
+def data_augmentation(dir_name, subdir_list, recursive=False):
+
+    tot_files = []
+    for subdir in subdir_list:
+        path = os.path.join(dir_name, subdir)
+        tot_files.append(len([name for name in os.listdir(path)]) // 2)
+
+    i = 0
+    max_num = max(tot_files) + max(tot_files)//2
+
+    # extract the images from the subdirectory
+    for subdir in subdir_list:
+        path = os.path.join(dir_name, subdir)
+        imgs = [os.path.join(path, f) for f in os.listdir(path) if f[-3:] != 'txt']
+
+        # create new images to have the same number of pictures for each category
+        while tot_files[i] < max_num:
+            img_path = random.choice(imgs)
+            img_root_ext = os.path.splitext(img_path)
+            label_path = img_root_ext[0] + '.txt'
+
+            new_img = DA(img_path, label_path)
+            tot_files[i] = tot_files[i] + 1
+            if recursive:
+                imgs.append(new_img)
+
+        i = i + 1
+
+    print('---- Data augmentation ----')
+
+
+def create_dataset(dir_name, subdir_list, augment=False, recursive=False):
+
+    if augment:
+        data_augmentation(dir_name, subdir_list, recursive)
 
     # TO DO: understand where to put classes.txt
     if os.path.exists(os.path.join(os.getcwd(), 'classes.txt')):
@@ -116,5 +157,5 @@ def create_dataset(dir_name, subdir_list):
 if __name__ == '__main__':
     remove_dataset_folders([tmp_folder_name, 'datasets', img_folder_name])
     create_local_copy(base_folder_name)
-    create_dataset(img_folder_name, ['1', '22', '159'])
+    create_dataset(img_folder_name, subdir_l, augment=True, recursive=True)
     split_dataset()
