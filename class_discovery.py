@@ -1,15 +1,28 @@
+import os
 import numpy as np
 import torch
 import cv2
 
 
+def get_best_class(probabilities):
+
+    best = []
+    for elem in probabilities:
+
+        if len(best) == 0 or elem[1] > best[1]:
+            best = elem
+
+    # Return class name and with the best confidence
+    return best
+
+
 def yolo_detection(img_path):
 
-    # insert the path to the yolov5 directory
-    model_dir = ''
+    # Insert the path to the yolov5 directory
+    model_dir = '/home/christofer/PycharmProjects/computerVision/yolov5'
 
-    # insert the path to the custom weights
-    custom_weights = ''
+    # Insert the path to the custom weights
+    custom_weights = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/exp24/weights/best.pt'
 
     model = torch.hub.load(model_dir,'custom', source='local', path=custom_weights, force_reload=True)
     model.conf = 0.25  # confidence threshold
@@ -20,14 +33,16 @@ def yolo_detection(img_path):
     # Perform inference
     results = model(img_path)
 
-    # Print results
-    results.print()  # Print results to console
+    # results.print()
     # results.save()   # Save results to disk (runs in YOLOv5/runs/detect)
-    results.show()   # Show results
+    # results.show()     # Shows the image and the bbox
 
     # Access detailed results if needed
     df = results.pandas().xyxy[0]  # Get bounding boxes as pandas DataFrame
-    print(df)
+    #print(df)
+
+    # Return class name and with the best confidence
+    return get_best_class(df[['name', 'confidence']].values.tolist())
 
 
 def get_max_value(dtype):
@@ -41,6 +56,10 @@ def get_max_value(dtype):
 
 def get_brightness(img_path):
     image = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+
+    if image is None:
+        print(f"Warning: Image not found or could not be loaded: {img_path}")
+        return None
 
     # Determine the max possible value for the image's dtype
     max_val = get_max_value(image.dtype)
@@ -56,23 +75,64 @@ def is_lighting(img_path):
     threshold = 0.34
     brightness = get_brightness(img_path)
 
+    if brightness is None:
+        return 0  # Assuming no lighting class if the image can't be processed
+
     if brightness <= threshold:
         return 1 - (brightness/threshold)
 
     return 0
 
-
-if __name__ == '__main__':
-
-    image_path = ''
-    labels = []
+def test_img(image_path):
+    classes = []
 
     lighting_prob = is_lighting(image_path)
 
-    # TO DO: insert a probability threshold
     if lighting_prob:
-        labels.append('illuminazione')
-    else:
+        classes.append(['illuminazione_brightness', lighting_prob])
 
-        # TO DO: extract the labels from yolo
-        yolo_detection(image_path)
+    # TO DO: insert a probability threshold
+    if lighting_prob <= 0.50:
+        label = yolo_detection(image_path)
+
+        if len(label) != 0:
+            classes.append(label)
+
+    return get_best_class(classes), classes
+
+if __name__ == '__main__':
+
+    valid_image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif']
+
+    test_dir = ''
+    dir_classes = {'undefined': 0}
+    tot_imgs = 0
+
+    for image_path in os.listdir(test_dir):
+
+        full_path = os.path.join(test_dir, image_path)
+
+        if os.path.splitext(full_path)[1].lower() in valid_image_extensions:
+            print(f"\nProcessing image: {full_path}")
+            tot_imgs += 1
+
+            best, classes = test_img(full_path)
+
+            if len(best) == 0:
+                dir_classes['undefined'] +=1
+            elif best[0] in dir_classes:
+                dir_classes[best[0]] += 1
+            else:
+                dir_classes[best[0]] = 1
+        else:
+            print(f"Skipping non-image file: {full_path}")
+
+
+    print(f'Total images: {tot_imgs}')
+    print('Predicted results: ')
+    for key, value in dir_classes.items():
+        print(f'- {key}: {value}')
+
+    #best, classes = test_img(image_path)
+    #print('Classes: ', classes)
+    #print('Best: ', best)

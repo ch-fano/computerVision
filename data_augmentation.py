@@ -2,6 +2,7 @@ import albumentations as A
 import cv2
 import os
 
+
 def data_augmentation(img_path, label_path):
 
     data_augmentation.counter = getattr(data_augmentation, 'counter', 0) + 1
