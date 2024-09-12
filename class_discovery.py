@@ -70,13 +70,13 @@ def get_brightness(img_path):
     return np.mean(gray_image) / max_val
 
 
-def is_lighting(img_path):
+def is_illumination(img_path):
 
-    threshold = 0.34
+    threshold = 0.30
     brightness = get_brightness(img_path)
 
     if brightness is None:
-        return 0  # Assuming no lighting class if the image can't be processed
+        return 0  # Assuming no illumination class if the image can't be processed
 
     if brightness <= threshold:
         return 1 - (brightness/threshold)
@@ -86,13 +86,13 @@ def is_lighting(img_path):
 def test_img(image_path):
     classes = []
 
-    lighting_prob = is_lighting(image_path)
+    illumination_prob = is_illumination(image_path)
 
-    if lighting_prob:
-        classes.append(['illuminazione_brightness', lighting_prob])
+    if illumination_prob:
+        classes.append(['illuminazione_brightness', illumination_prob])
 
     # TO DO: insert a probability threshold
-    if lighting_prob <= 0.50:
+    if illumination_prob <= 0.50:
         label = yolo_detection(image_path)
 
         if len(label) != 0:

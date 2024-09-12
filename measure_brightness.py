@@ -1,11 +1,10 @@
-from time import sleep
-
 import numpy as np
+import pickle
 import os
 
-from torch.nn.functional import threshold
 from tqdm import tqdm
-from class_discovery import get_brightness, is_lighting
+from class_discovery import get_brightness, is_illumination
+import matplotlib.pyplot as plt
 
 
 def extract_images(class_path):
@@ -72,7 +71,7 @@ def test_probability(class_path):
     print('Class directory: ' + class_path)
 
     for img in tqdm(imgs, desc="Evaluating the probability of each image"):
-        prob.append(is_lighting(img))
+        prob.append(is_illumination(img))
 
     print('Probability mean: ', sum(prob) / len(prob))
 
@@ -84,7 +83,7 @@ def test_classes_threshold(base_dir, subdir_list, threshold):
     tot_under_t = 0
 
     for n,subdir in enumerate(subdir_list):
-        print(f'\nTesting subdir {n}/{num_classes}')
+        print(f'\nTesting subdir {n+1}/{num_classes}')
 
         dir_elem, dir_under_t = test_threshold(os.path.join(base_dir, subdir), threshold)
         tot_elem += dir_elem
@@ -93,6 +92,87 @@ def test_classes_threshold(base_dir, subdir_list, threshold):
     print('\n---------------------------------------')
     print('Total elements: ', tot_elem)
     print('Elements under the threshold: ', tot_under_t)
+
+
+def create_brightness_pickle(base_dir, classes_subdir_list, illumination_path_dir, pickle_filename):
+    num_classes = len(classes_subdir_list)
+
+    brightness_dict = {
+        'illumination': [],
+        'other_classes' : [],
+    }
+
+    # Extract the brightness of the illumination class
+    print(f'\nClass directory: {illumination_path_dir}')
+
+    imgs = extract_images(illumination_path_dir)
+    for img in tqdm(imgs, desc="Computing the class images' brightness"):
+        brightness_dict['illumination'].append(get_brightness(img))
+
+
+    # Extract the other classes brightness
+    for n,subdir in enumerate(classes_subdir_list):
+        print(f'\nEvaluating subdir {n+1}/{num_classes}')
+        print(f'\nClass directory: {os.path.join(base_dir, subdir)}' )
+
+        imgs = extract_images(os.path.join(base_dir, subdir))
+        for img in tqdm(imgs, desc="Computing the class images' brightness"):
+            brightness_dict['other_classes'].append(get_brightness(img))
+
+    print('Creating pickle file...')
+    with open(pickle_filename, 'wb') as f:
+        pickle.dump(brightness_dict, f)
+
+    print('Pickle file created.')
+
+def brightness_graph(pickle_filename):
+    with open(pickle_filename, 'rb') as f:
+        brightness_dict = pickle.load(f)
+
+    tot_other_classes = len(brightness_dict['other_classes'])
+    tot_illumination = len(brightness_dict['illumination'])
+
+    other_classes = []
+    illumination = []
+
+    values = np.arange(0, 1.05, 0.05)  # The stop is 1.05 to include 1
+    threshold_list = list(values)
+
+    for threshold in threshold_list:
+        below_elem = 0
+        for brightness in brightness_dict['illumination']:
+            if brightness <= threshold:
+                below_elem += 1
+        correctness = below_elem / tot_illumination
+        illumination.append(correctness)
+
+        below_elem = 0
+        for brightness in brightness_dict['other_classes']:
+            if brightness <= threshold:
+                below_elem += 1
+        correctness = (tot_other_classes - below_elem) / tot_other_classes
+        other_classes.append(correctness)
+
+    plt.plot(threshold_list, illumination, marker='o', color='blue', label='Illuminazione')
+    plt.plot(threshold_list, other_classes, marker='o', color='red', label='Altre classi')
+
+    plt.xlabel('Soglia di luminosità')
+    plt.ylabel('Correttezza')
+    plt.title('Performance - Soglia Luminosità')
+    #plt.grid(True)
+
+    plt.xticks(threshold_list) # Set the step to 0.05 for the X-axis
+    plt.yticks(threshold_list) # Set the step to 0.05 for the Y-axis
+
+    # Rotate the x-axis labels to prevent overlapping
+    plt.xticks(rotation=45, ha='right')
+
+    # Adjust layout to make sure everything fits
+    plt.tight_layout()
+
+    # Add a legend to distinguish the two lines
+    plt.legend()
+    plt.savefig('brightness_chart.png')
 
 
 if __name__ == '__main__':
@@ -110,8 +190,14 @@ if __name__ == '__main__':
                 '21_bicicletta_abbandonata',
                 #'22_strada_al_buio',
                 '27_deiezioni_canine',
+                '47_scuola',
                 '156_siringa_abbandonata',
                 '159_rifiuti_abbandonati']
 
+    illumination_path = '/home/christofer/Desktop/illumination/'
+    p_filename = 'brightness.pickle'
+
     test_classes_threshold(base_folder_name, subdir_l, threshold)
-    test_threshold(c_path, threshold)
+    # test_threshold(c_path, threshold)
+    #create_brightness_pickle(base_folder_name, subdir_l, illumination_path, p_filename)
+    #brightness_graph(p_filename)
