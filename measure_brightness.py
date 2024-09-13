@@ -3,11 +3,19 @@ import pickle
 import os
 
 from tqdm import tqdm
-from class_discovery import get_brightness, is_illumination
+from class_discovery import get_brightness
 import matplotlib.pyplot as plt
 
 
 def extract_images(class_path):
+    """
+    This function scans a directory and returns a list of paths for all image files
+    that have common image file extensions.
+
+    :param class_path: The directory to search for image files.
+    :return: A list of full paths to all image files in the dir.ectory
+    """
+
     valid_image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif']
     imgs = []
 
@@ -20,6 +28,13 @@ def extract_images(class_path):
     return imgs
 
 def get_class_brightness(class_path):
+    """
+    This function evaluate the brightness of all image files in the specified directory and
+    returns the minimum, maximum, mean and median brightness.
+
+    :param class_path: The directory to compute the metrics.
+    """
+
     brightness = []
     imgs = extract_images(class_path)
 
@@ -36,10 +51,15 @@ def get_class_brightness(class_path):
     print('Median: ', np.median(brightness))
 
 
-def test_threshold(class_path, threshold):
-    '''
-    This class tests the threshold and evaluate the number of images with brightness below it
-    '''
+def test_class_threshold(class_path, threshold):
+    """
+    This function tests the threshold and evaluate the number of images with brightness below it
+    for all the images in the directory.
+
+    :param class_path: The directory to test.
+    :param threshold: The threshold to test.
+    :return: The total number of images and the number of images with brightness below the threshold.
+    """
 
     imgs = extract_images(class_path)
     passed_elem = 0
@@ -58,24 +78,15 @@ def test_threshold(class_path, threshold):
 
     return len(imgs), passed_elem
 
-
-
-def test_probability(class_path):
-    '''
-    This class evaluates the mean probability of the class to be labeled as the class "illuminazione"
-    '''
-
-    imgs = extract_images(class_path)
-    prob = []
-
-    print('Class directory: ' + class_path)
-
-    for img in tqdm(imgs, desc="Evaluating the probability of each image"):
-        prob.append(is_illumination(img))
-
-    print('Probability mean: ', sum(prob) / len(prob))
-
 def test_classes_threshold(base_dir, subdir_list, threshold):
+    """
+    This function tests the threshold and evaluate the number of images with brightness below it for all
+    the specified directories.
+
+    :param base_dir: The common base directory.
+    :param subdir_list: The list of subdirectories to test.
+    :param threshold: The threshold to test.
+    """
 
     num_classes = len(subdir_list)
 
@@ -85,7 +96,7 @@ def test_classes_threshold(base_dir, subdir_list, threshold):
     for n,subdir in enumerate(subdir_list):
         print(f'\nTesting subdir {n+1}/{num_classes}')
 
-        dir_elem, dir_under_t = test_threshold(os.path.join(base_dir, subdir), threshold)
+        dir_elem, dir_under_t = test_class_threshold(os.path.join(base_dir, subdir), threshold)
         tot_elem += dir_elem
         tot_under_t += dir_under_t
 
@@ -95,6 +106,15 @@ def test_classes_threshold(base_dir, subdir_list, threshold):
 
 
 def create_brightness_pickle(base_dir, classes_subdir_list, illumination_path_dir, pickle_filename):
+    """
+    This function compute the brightness of the images in the specified directories and
+    writes the result in the pickle file.
+
+    :param base_dir: The common base directory.
+    :param classes_subdir_list: The list of subdirectories to test.
+    :param illumination_path_dir: The path to the directory of the 'illumination' class.
+    :param pickle_filename: The name of the pickle file.
+    """
     num_classes = len(classes_subdir_list)
 
     brightness_dict = {
@@ -126,6 +146,13 @@ def create_brightness_pickle(base_dir, classes_subdir_list, illumination_path_di
     print('Pickle file created.')
 
 def brightness_graph(pickle_filename):
+    """
+    This function extract the classes brightness from the pickle file, tests the classes with increasing
+    threshold from 0 to 1 and plots the result in 'brightness_chart.png'.
+
+    :param pickle_filename: The name of the pickle file.
+    """
+
     with open(pickle_filename, 'rb') as f:
         brightness_dict = pickle.load(f)
 
@@ -178,26 +205,24 @@ def brightness_graph(pickle_filename):
 if __name__ == '__main__':
 
     # Insert the path to the directory of the class
-    c_path = '/home/christofer/Desktop/temp'
+    illumination_path = '/home/christofer/Desktop/illumination/'
+    base_folder_name = '/home/christofer/Desktop/cv_images'
+    subdir_l = [
+        '1_strada_buca',
+        '4_semaforo_non_funzionante',
+        '11_segnaletica_danneggiata',
+        '14_graffiti',
+        '20_veicolo_abbandonato',
+        '21_bicicletta_abbandonata',
+        #'22_strada_al_buio',
+        '27_deiezioni_canine',
+        '47_scuola',
+        '156_siringa_abbandonata',
+        '159_rifiuti_abbandonati'
+    ]
+    p_filename = 'brightness.pickle'
     threshold = 0.30
 
-    base_folder_name = '/home/christofer/Desktop/cv_images'
-    subdir_l = ['1_strada_buca',
-                '4_semaforo_non_funzionante',
-                '11_segnaletica_danneggiata',
-                '14_graffiti',
-                '20_veicolo_abbandonato',
-                '21_bicicletta_abbandonata',
-                #'22_strada_al_buio',
-                '27_deiezioni_canine',
-                '47_scuola',
-                '156_siringa_abbandonata',
-                '159_rifiuti_abbandonati']
-
-    illumination_path = '/home/christofer/Desktop/illumination/'
-    p_filename = 'brightness.pickle'
-
-    test_classes_threshold(base_folder_name, subdir_l, threshold)
-    # test_threshold(c_path, threshold)
-    #create_brightness_pickle(base_folder_name, subdir_l, illumination_path, p_filename)
-    #brightness_graph(p_filename)
+    # test_classes_threshold(base_folder_name, subdir_l, threshold)
+    # create_brightness_pickle(base_folder_name, subdir_l, illumination_path, p_filename)
+    # brightness_graph(p_filename)
