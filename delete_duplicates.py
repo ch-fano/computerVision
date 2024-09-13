@@ -2,6 +2,12 @@ import os
 
 
 def delete_duplicates(src_dir, dpl_dir):
+    """
+    This function deletes duplicate files in the src_dir directory if they are present in the dpl_dir directory.
+
+    :param src_dir: The directory containing the files to be deleted.
+    :param dpl_dir: The directory containing the files which could be duplicated.
+    """
 
     if not os.path.exists(src_dir) or not os.path.isdir(src_dir):
         raise Exception("Source directory does not exist")

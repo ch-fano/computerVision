@@ -5,7 +5,12 @@ import cv2
 
 
 def get_best_class(probabilities):
-
+    """
+    This function extract the label with the highest probability.
+    
+    :param probabilities: List of [label, probability].
+    :return: The [label, probability] with the highest probability.
+    """
     best = []
     for elem in probabilities:
 
@@ -17,7 +22,14 @@ def get_best_class(probabilities):
 
 
 def yolo_detection(img_path):
-
+    """
+    This function process the image with the trained yolo model and returns the predicted class with
+    the highest confidence.
+    
+    :param img_path: The path to the image to recognize.
+    :return: The class with the highest probability.
+    """
+    
     # Insert the path to the yolov5 directory
     model_dir = '/home/christofer/PycharmProjects/computerVision/yolov5'
 
@@ -46,6 +58,13 @@ def yolo_detection(img_path):
 
 
 def get_max_value(dtype):
+    """
+    This function returns the maximum brightness value of a given image type.
+    
+    :param dtype: The image type
+    :return: The maximum brightness value the given image type.
+    """
+    
     if np.issubdtype(dtype, np.integer):
         return np.iinfo(dtype).max
     elif np.issubdtype(dtype, np.floating):
@@ -55,6 +74,12 @@ def get_max_value(dtype):
 
 
 def get_brightness(img_path):
+    """
+    This function returns the brightness expressed form 0 to 1 of a given image.
+    
+    :param img_path: The path to the image to calculate the brightness.
+    :return: The brightness of the image.
+    """
     image = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
 
     if image is None:
@@ -71,7 +96,13 @@ def get_brightness(img_path):
 
 
 def is_illumination(img_path):
-
+    """
+    This function returns the probability of the given image to be an instance of the 'illumination' class.
+    
+    :param img_path: The image to compute the probability.
+    :return: The probability of the image to be an instance of the 'illumination' class.
+    """
+    
     threshold = 0.30
     brightness = get_brightness(img_path)
 
@@ -83,7 +114,15 @@ def is_illumination(img_path):
 
     return 0
 
-def test_img(image_path):
+def recognition_pipeline(image_path):
+    """
+    This function implements the recognition pipeline of an image, it extracts the probabilities
+    of the image to be an instance of each class.
+    
+    :param image_path: The image to recognize.
+    :return: The class with the highest probability and the list of the classes of which the image could be an instance.
+    """
+    
     classes = []
 
     illumination_prob = is_illumination(image_path)
@@ -91,7 +130,6 @@ def test_img(image_path):
     if illumination_prob:
         classes.append(['illuminazione_brightness', illumination_prob])
 
-    # TO DO: insert a probability threshold
     if illumination_prob <= 0.50:
         label = yolo_detection(image_path)
 
@@ -116,7 +154,7 @@ if __name__ == '__main__':
             print(f"\nProcessing image: {full_path}")
             tot_imgs += 1
 
-            best, classes = test_img(full_path)
+            best, classes = recognition_pipeline(full_path)
 
             if len(best) == 0:
                 dir_classes['undefined'] +=1

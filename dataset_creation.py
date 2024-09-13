@@ -7,6 +7,11 @@ from data_augmentation import data_augmentation as DA
 
 
 def create_local_copy(src_path):
+    """
+    This function creates a local copy the specified directory in the project directory.
+
+    :param src_path: The directory to copy.
+    """
     if os.path.isdir(src_path):
         shutil.copytree(src_path, os.path.join(os.getcwd(), img_folder_name))
         print('---- Created local copy ----')
@@ -14,6 +19,12 @@ def create_local_copy(src_path):
 
 # Utility function to move images
 def move_files_to_folder(list_of_files, destination_folder):
+    """
+    This function moves the specified files to the specified folder.
+
+    :param list_of_files: The list of files to move.
+    :param destination_folder: The destination folder.
+    """
     for f in list_of_files:
         try:
             shutil.move(f, destination_folder)
@@ -22,6 +33,10 @@ def move_files_to_folder(list_of_files, destination_folder):
             print(f'File which caused the error: {f}')
 
 def create_dataset_folders():
+    """
+    This function creates the dataset folders of the images and labels.
+    """
+
     # Create the datasets directory
     parent_dir_datasets = os.path.join(os.getcwd(), 'datasets')
     os.mkdir(parent_dir_datasets)
@@ -33,7 +48,7 @@ def create_dataset_folders():
     os.mkdir(parent_dir_images)
     os.mkdir(parent_dir_labels)
 
-    # Create che the subdirectories
+    # Create the subdirectories
     for new_dir in ['train', 'val', 'test']:
         # Create directory for images
         path = os.path.join(parent_dir_images, new_dir)
@@ -47,6 +62,12 @@ def create_dataset_folders():
 
 
 def remove_dataset_folders(dir_list):
+    """
+    This function removes the specified folders in the current directory.
+
+    :param dir_list: The list of folders to remove.
+    """
+
     for d in dir_list:
         if os.path.isdir(d):
             shutil.rmtree(os.path.join(os.getcwd(), d), ignore_errors=False, onerror=None)
@@ -55,6 +76,11 @@ def remove_dataset_folders(dir_list):
 
 
 def split_dataset():
+    """
+    This function randomly splits the dataset of images and labels into train, test and validation sets.
+
+    """
+
     # Read images and annotations
     images = []
     annotations = []
@@ -94,7 +120,16 @@ def split_dataset():
     print('---- Dataset successfully splitted ----')
 
 
-def data_augmentation(dir_name, subdir_list, recursive=False):
+def apply_data_augmentation(dir_name, subdir_list, recursive=False):
+    """
+    This function apply data augmentation to the specified directories. At the end each directory has the same
+    number of images.
+
+    :param dir_name: The common base directory.
+    :param subdir_list: The subdirectories with the images to augment.
+    :param recursive: If 'True' it applies the data augmentation also on the images already augmented .
+    """
+
     tot_files = []
     for subdir in subdir_list:
         path = os.path.join(dir_name, subdir)
@@ -125,8 +160,18 @@ def data_augmentation(dir_name, subdir_list, recursive=False):
 
 
 def create_dataset(dir_name, subdir_list, augment=False, recursive=False):
+    """
+    This function moves all the images and labels in the specified subdirectories in a unique folder.
+
+    :param dir_name: The common base directory.
+    :param subdir_list: The subdirectories with the images and labels to move.
+    :param augment: If 'True' it applies the data augmentation on the images.
+    :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
+    :return:
+    """
+
     if augment:
-        data_augmentation(dir_name, subdir_list, recursive)
+        apply_data_augmentation(dir_name, subdir_list, recursive)
 
     if os.path.exists(os.path.join(os.getcwd(), 'classes.txt')):
         os.remove(os.path.join(os.getcwd(), 'classes.txt'))
