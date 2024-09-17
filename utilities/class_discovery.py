@@ -31,7 +31,7 @@ def yolo_detection(img_path):
     """
     
     # Insert the path to the yolov5 directory
-    model_dir = '/home/christofer/PycharmProjects/computerVision/yolov5'
+    model_dir = '/yolov5'
 
     # Insert the path to the custom weights
     custom_weights = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/exp24/weights/best.pt'

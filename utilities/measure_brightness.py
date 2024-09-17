@@ -3,7 +3,7 @@ import pickle
 import os
 
 from tqdm import tqdm
-from class_discovery import get_brightness
+from utilities.class_discovery import get_brightness
 import matplotlib.pyplot as plt
 
 

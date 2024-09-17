@@ -2,15 +2,16 @@ import os
 import shutil
 import random
 from sklearn.model_selection import train_test_split
-from data_augmentation import data_augmentation as DA
+from utilities.data_augmentation import data_augmentation as DA
 
 
 
-def create_local_copy(src_path):
+def create_local_copy(src_path, img_folder_name):
     """
     This function creates a local copy the specified directory in the project directory.
 
     :param src_path: The directory to copy.
+    :param img_folder_name: The name of the folder to copy the image to.
     """
     if os.path.isdir(src_path):
         shutil.copytree(src_path, os.path.join(os.getcwd(), img_folder_name))
@@ -75,10 +76,11 @@ def remove_dataset_folders(dir_list):
     print('---- Removed old folders ----')
 
 
-def split_dataset():
+def split_dataset(tmp_folder_path):
     """
     This function randomly splits the dataset of images and labels into train, test and validation sets.
 
+    :param tmp_folder_path: The temporary folder which contains the images to  split.
     """
 
     # Read images and annotations
@@ -109,12 +111,12 @@ def split_dataset():
     create_dataset_folders()
 
     # Move the splits into their folders
-    move_files_to_folder(train_images, os.path.join('datasets', 'images', 'train'))
-    move_files_to_folder(val_images, os.path.join('datasets', 'images', 'val'))
-    move_files_to_folder(test_images, os.path.join('datasets','images','test'))
-    move_files_to_folder(train_annotations, os.path.join('datasets', 'labels', 'train'))
-    move_files_to_folder(val_annotations, os.path.join('datasets','labels','val'))
-    move_files_to_folder(test_annotations, os.path.join('datasets','labels','test'))
+    move_files_to_folder(train_images, os.path.join(os.getcwd(), 'datasets', 'images', 'train'))
+    move_files_to_folder(val_images, os.path.join(os.getcwd(), 'datasets', 'images', 'val'))
+    move_files_to_folder(test_images, os.path.join(os.getcwd(), 'datasets', 'images', 'test'))
+    move_files_to_folder(train_annotations, os.path.join(os.getcwd(), 'datasets', 'labels', 'train'))
+    move_files_to_folder(val_annotations, os.path.join(os.getcwd(), 'datasets', 'labels', 'val'))
+    move_files_to_folder(test_annotations, os.path.join(os.getcwd(), 'datasets', 'labels', 'test'))
 
     remove_dataset_folders([tmp_folder_name, img_folder_name])
     print('---- Dataset successfully splitted ----')
@@ -159,11 +161,11 @@ def apply_data_augmentation(dir_name, subdir_list, recursive=False):
     print('---- Data augmentation ----')
 
 
-def create_dataset(dir_name, subdir_list, augment=False, recursive=False):
+def create_dataset(dir_path, subdir_list, augment=False, recursive=False):
     """
     This function moves all the images and labels in the specified subdirectories in a unique folder.
 
-    :param dir_name: The common base directory.
+    :param dir_path: The path to the common base directory.
     :param subdir_list: The subdirectories with the images and labels to move.
     :param augment: If 'True' it applies the data augmentation on the images.
     :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
@@ -171,19 +173,19 @@ def create_dataset(dir_name, subdir_list, augment=False, recursive=False):
     """
 
     if augment:
-        apply_data_augmentation(dir_name, subdir_list, recursive)
+        apply_data_augmentation(dir_path, subdir_list, recursive)
 
     if os.path.exists(os.path.join(os.getcwd(), 'classes.txt')):
         os.remove(os.path.join(os.getcwd(), 'classes.txt'))
 
-    shutil.move(os.path.join(dir_name, 'classes.txt'), os.getcwd())
+    shutil.move(os.path.join(dir_path, 'classes.txt'), os.getcwd())
 
-    os.chdir(dir_name)
+    os.chdir(dir_path)
     files = []
 
     # For each directory extract the files and create a list of them
     for subdir in subdir_list:
-        path = os.path.join(dir_name, subdir)
+        path = os.path.join(dir_path, subdir)
         files += [os.path.join(path, f) for f in os.listdir(subdir) if f != 'classes.txt']
 
     os.chdir('..')
@@ -198,7 +200,7 @@ def create_dataset(dir_name, subdir_list, augment=False, recursive=False):
 if __name__ == '__main__':
     img_folder_name = 'img_copy'
     tmp_folder_name = 'tmp_folder'
-    base_folder_name = '/home/christofer/Desktop/cv_images'  # Your path to the photo
+    base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
     subdir_l = ['1_strada_buca',
                 '4_semaforo_non_funzionante',
                 '11_segnaletica_danneggiata',
@@ -211,6 +213,6 @@ if __name__ == '__main__':
                 '159_rifiuti_abbandonati']  # Add your subdir
 
     remove_dataset_folders([tmp_folder_name, 'datasets', img_folder_name])
-    create_local_copy(base_folder_name)
-    create_dataset(img_folder_name, subdir_l, augment=True, recursive=True)
-    split_dataset()
+    create_local_copy(base_img_folder_path, img_folder_name)
+    create_dataset(os.path.join(os.getcwd(), img_folder_name), subdir_l, augment=True, recursive=True)
+    split_dataset(os.path.join(os.getcwd(), tmp_folder_name))
