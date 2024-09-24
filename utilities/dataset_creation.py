@@ -2,7 +2,7 @@ import os
 import shutil
 import random
 from sklearn.model_selection import train_test_split
-from utilities.data_augmentation import data_augmentation as DA
+from utilities.data_augmentation import data_augmentation
 
 
 
@@ -76,11 +76,13 @@ def remove_dataset_folders(dir_list):
     print('---- Removed old folders ----')
 
 
-def split_dataset(tmp_folder_path):
+def split_dataset(tmp_folder_path, augment=False, recursive=False):
     """
     This function randomly splits the dataset of images and labels into train, test and validation sets.
 
     :param tmp_folder_path: The temporary folder which contains the images to  split.
+    :param augment: If 'True' it applies the data augmentation on the train set.
+    :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
     """
 
     # Read images and annotations
@@ -102,9 +104,13 @@ def split_dataset(tmp_folder_path):
 
     # Split the dataset into train-valid-test splits
     random_seed = random.randint(0, 10000)
+
+    # train_test_split apply a synchronous shuffle to the images and annotations to preserve the relation between them
     train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations,
                                                                                     test_size=0.2,
                                                                                     random_state=random_seed)
+
+    # divides the previous validation set into test and validation
     val_images, test_images, val_annotations, test_annotations = train_test_split(val_images, val_annotations,
                                                                                   test_size=0.5,
                                                                                   random_state=random_seed)
@@ -121,74 +127,78 @@ def split_dataset(tmp_folder_path):
     remove_dataset_folders([tmp_folder_name, img_folder_name])
     print('---- Dataset successfully splitted ----')
 
+    if augment:
+        apply_data_augmentation(os.path.join(os.getcwd(), 'datasets'), recursive)
 
-def apply_data_augmentation(dir_name, subdir_list, recursive=False):
+
+def apply_data_augmentation(dir_name, recursive=False):
     """
-    This function apply data augmentation to the specified directories. At the end each directory has the same
-    number of images.
+    This function apply data augmentation to the train set of the specified directory
 
-    :param dir_name: The common base directory.
-    :param subdir_list: The subdirectories with the images to augment.
+    :param dir_name: The directory to apply data augmentation.
     :param recursive: If 'True' it applies the data augmentation also on the images already augmented .
     """
 
-    tot_files = []
-    for subdir in subdir_list:
-        path = os.path.join(dir_name, subdir)
-        tot_files.append(len([name for name in os.listdir(path)]) // 2)
+    print('---- Starting the data augmentation ----')
+    images_dir = os.path.join(dir_name, 'images', 'train')
+    labels_dir = os.path.join(dir_name, 'labels', 'train')
 
-    i = 0
-    max_num = max(tot_files) + max(tot_files) // 2 # 3/2 of the max_number
+    class_instances = {}
+    class_images = {}
+    for img_name in os.listdir(images_dir):
+        class_id = img_name[:img_name.find('_')]     # each image has name which starts with id___
 
-    # Extract the images from the subdirectory
-    for subdir in subdir_list:
-        path = os.path.join(dir_name, subdir)
-        imgs = [os.path.join(path, f) for f in os.listdir(path) if f[-3:] != 'txt' and f != '.DS_Store']
+        # count the number of elements
+        class_instances[class_id] = class_instances.get(class_id, 0) + 1
+
+        if class_id not in class_images:
+            class_images[class_id] = []
+        class_images[class_id].append(img_name)
+
+
+    augmented_images = 0
+    tot_instances = max(class_instances.values()) + min(class_instances.values())
+
+
+    for class_id, images in class_images.items():
 
         # Create new images to have the same number of pictures for each category
-        while tot_files[i] < max_num:
-            img_path = random.choice(imgs)
-            img_root_ext = os.path.splitext(img_path)
-            label_path = img_root_ext[0] + '.txt'
+        while class_instances[class_id] < tot_instances:
+            augmented_images += 1
+            img_name = random.choice(images)
+            label_name = os.path.splitext(img_name)[0] + '.txt'
 
-            new_img = DA(img_path, label_path)
-            tot_files[i] = tot_files[i] + 1
+            new_img_path = data_augmentation(
+                os.path.join(images_dir, img_name),
+                os.path.join(labels_dir, label_name)
+            )
+
+            class_instances[class_id] += 1
             if recursive:
-                imgs.append(new_img)
+                images.append(os.path.basename(new_img_path))
 
-        i = i + 1
-
-    print('---- Data augmentation ----')
+    print(f'---- Finished data augmentation: augmented {augmented_images} images ----')
 
 
-def create_dataset(dir_path, subdir_list, augment=False, recursive=False):
+def create_dataset(dir_path, subdir_list):
     """
     This function moves all the images and labels in the specified subdirectories in a unique folder.
 
     :param dir_path: The path to the common base directory.
     :param subdir_list: The subdirectories with the images and labels to move.
-    :param augment: If 'True' it applies the data augmentation on the images.
-    :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
     :return:
     """
-
-    if augment:
-        apply_data_augmentation(dir_path, subdir_list, recursive)
 
     if os.path.exists(os.path.join(os.getcwd(), 'classes.txt')):
         os.remove(os.path.join(os.getcwd(), 'classes.txt'))
 
     shutil.move(os.path.join(dir_path, 'classes.txt'), os.getcwd())
 
-    os.chdir(dir_path)
     files = []
-
     # For each directory extract the files and create a list of them
     for subdir in subdir_list:
-        path = os.path.join(dir_path, subdir)
-        files += [os.path.join(path, f) for f in os.listdir(subdir) if f != 'classes.txt']
-
-    os.chdir('..')
+        subdir_path = os.path.join(dir_path, subdir)
+        files += [os.path.join(subdir_path, f) for f in os.listdir(subdir_path) if f != 'classes.txt']
 
     # Create the new temporary folder and move files on it
     os.mkdir(os.path.join(os.getcwd(), tmp_folder_name))
@@ -200,19 +210,22 @@ def create_dataset(dir_path, subdir_list, augment=False, recursive=False):
 if __name__ == '__main__':
     img_folder_name = 'img_copy'
     tmp_folder_name = 'tmp_folder'
-    base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
-    subdir_l = ['1_strada_buca',
-                '4_semaforo_non_funzionante',
-                '11_segnaletica_danneggiata',
-                '14_graffiti',
-                '20_veicolo_abbandonato',
-                '21_bicicletta_abbandonata',
-                '22_strada_al_buio',
-                '27_deiezioni_canine',
-                '156_siringa_abbandonata',
-                '159_rifiuti_abbandonati']  # Add your subdir
+    #base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
+    #subdir_l = ['1_strada_buca',
+    #            '4_semaforo_non_funzionante',
+    #            '11_segnaletica_danneggiata',
+    #            '14_graffiti',
+    #            '20_veicolo_abbandonato',
+    #            '21_bicicletta_abbandonata',
+    #            '22_strada_al_buio',
+    #            '27_deiezioni_canine',
+    #            '156_siringa_abbandonata',
+    #            '159_rifiuti_abbandonati']  # Add your subdir
+
+    base_img_folder_path = '/home/christofer/Desktop/first_images/'
+    subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
 
     remove_dataset_folders([tmp_folder_name, 'datasets', img_folder_name])
     create_local_copy(base_img_folder_path, img_folder_name)
-    create_dataset(os.path.join(os.getcwd(), img_folder_name), subdir_l, augment=True, recursive=True)
-    split_dataset(os.path.join(os.getcwd(), tmp_folder_name))
+    create_dataset(os.path.join(os.getcwd(), img_folder_name), subdir_l)
+    split_dataset(os.path.join(os.getcwd(), tmp_folder_name), False)
