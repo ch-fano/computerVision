@@ -1,4 +1,3 @@
-from numpy.core.numeric import cross
 from sklearn.model_selection import KFold
 from collections import Counter
 from pathlib import Path
@@ -7,6 +6,7 @@ import datetime
 import shutil
 import yaml
 import sys
+import pickle
 
 def create_k_fold(dataset_path, yaml_file, ksplit):
     print("Starting the splitting of the dataset...")
@@ -115,7 +115,7 @@ def create_k_fold(dataset_path, yaml_file, ksplit):
     print("Finished the splitting of the dataset")
     return ds_yamls
 
-def cross_validation(yolov5_path, ksplit, ds_yamls):
+def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=1):
     print("Starting the cross-validation...")
 
     # Add the directory of the file to sys.
@@ -129,10 +129,10 @@ def cross_validation(yolov5_path, ksplit, ds_yamls):
     # Define your additional arguments here
     batch = 8
     project = yolov5_path + "/runs/train"
-    epochs = 1
+    epochs = 40
 
-    for k in range(ksplit):
-        print(f"Evaluating split {k + 1}/{ksplit}")
+    for k in range(starting_split, ksplit+1):
+        print(f"Evaluating split {k}/{ksplit}")
 
         dataset_yaml = ds_yamls[k]
 
@@ -149,12 +149,36 @@ def cross_validation(yolov5_path, ksplit, ds_yamls):
 
         results[k] = metrics  # save output metrics for further analysis
 
+        with open(f"result_fold{k}.pickle", "wb") as result_file:
+            pickle.dump(metrics, result_file)
+
     print("Finished the cross-validation")
     print(results)
 
-def apply_cross_validation(dataset_path, yaml_file, yolov5_path, ksplit):
-    dataset_yamls = create_k_fold(dataset_path, yaml_file, ksplit)
-    cross_validation(yolov5_path, ksplit, dataset_yamls)
+    with open("metrics.pickle", "wb") as metrics_file:
+        pickle.dump(results, metrics_file)
+
+def extract_yamls(kfold_path, ksplit):
+    print("The dataset already exists, skipping creation")
+    print("Extracting yamls...")
+    ds_yamls = []
+
+    for k in range(1, ksplit+1):
+        ds_yamls.append(kfold_path / f"split_{k}/split_{k}_dataset.yaml")
+
+    print("Finished extracting yamls")
+    return ds_yamls
+
+def apply_cross_validation(dataset_path, yaml_file, yolov5_path, ksplit, starting_split=1):
+    kfold_path = Path(Path(dataset_path) / f"{datetime.date.today().isoformat()}_{ksplit}-Fold_Cross-val")
+
+    if kfold_path.exists():
+        dataset_yamls = extract_yamls(kfold_path, ksplit)
+    else:
+        dataset_yamls = create_k_fold(dataset_path, yaml_file, ksplit)
+
+    cross_validation(yolov5_path, ksplit, dataset_yamls, starting_split)
+
 
 if __name__ == "__main__":
     ksplit = 5
