@@ -8,6 +8,8 @@ import yaml
 import sys
 import pickle
 
+from dataset_creation import apply_data_augmentation
+
 
 def create_k_fold(dataset_path, yaml_file_path, ksplit):
     """
@@ -124,7 +126,7 @@ def create_k_fold(dataset_path, yaml_file_path, ksplit):
     print("Finished the splitting of the dataset")
     return ds_yamls
 
-def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=1):
+def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=0):
     """
     This function applies the cross validation by training the model according to the configuration on the yaml files
     for each fold. After the train is evaluated the performance of the model and memorized in a specific file.
@@ -151,8 +153,8 @@ def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=1):
     project = yolov5_path + "/runs/train"
     epochs = 40
 
-    for k in range(starting_split, ksplit+1):
-        print(f"Evaluating split {k}/{ksplit}")
+    for k in range(starting_split, ksplit):
+        print(f"Evaluating split {k+1}/{ksplit}")
 
         dataset_yaml = ds_yamls[k]
 
@@ -165,7 +167,7 @@ def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=1):
                   name=f'fold_{k}')
 
         # Run validation to get metrics
-        metrics = val.run(data=dataset_yaml, weights=f'{yolov5_path}/runs/train/fold_{k}/weights/best.pt')
+        metrics = val.run(data=dataset_yaml, weights=f'{yolov5_path}/runs/train/fold_{k}/weights/best.pt', name=f"fold{k}")
 
         results[k] = metrics  # save output metrics for further analysis
 
@@ -195,7 +197,7 @@ def extract_yamls(kfold_dataset_path, ksplit):
     print("Finished extracting yamls")
     return ds_yamls
 
-def apply_cross_validation(dataset_path, yaml_file_path, yolov5_path, ksplit, starting_split=1):
+def apply_cross_validation(dataset_path, yaml_file_path, yolov5_path, ksplit, starting_split=0):
     """
     This function must be called after the splitting of the dataset in train, val and test sets.
     It setups the dataset for the cross validation and applies it memorizing the partial results on pickles files.
@@ -207,7 +209,7 @@ def apply_cross_validation(dataset_path, yaml_file_path, yolov5_path, ksplit, st
     :param starting_split: The number of the split to start with, used to restart the training from this point in case of an error
                            or interruption during the training.
     """
-    kfold_path = Path(Path(dataset_path) / f"{datetime.date.today().isoformat()}_{ksplit}-Fold_Cross-val")
+    kfold_path = Path(Path(dataset_path) / f"2024-10-01_{ksplit}-Fold_Cross-val")
 
     if kfold_path.exists():
         print("The dataset already exists, skipping creation")
@@ -215,6 +217,9 @@ def apply_cross_validation(dataset_path, yaml_file_path, yolov5_path, ksplit, st
         dataset_yamls = extract_yamls(kfold_path, ksplit)
     else:
         dataset_yamls = create_k_fold(dataset_path, yaml_file_path, ksplit)
+
+        for k in range(1, ksplit+1):
+            apply_data_augmentation(kfold_path / f"split_{k}", cross=True, recursive=True)
 
     cross_validation(yolov5_path, ksplit, dataset_yamls, starting_split)
 
@@ -224,7 +229,8 @@ if __name__ == "__main__":
 
     apply_cross_validation(
         "/home/christofer/PycharmProjects/computerVision/datasets",
-        "/yolov5/data/comunichiamo_10_classes.yaml",
+        "/home/christofer/PycharmProjects/computerVision/yolov5/data/comunichiamo_10_classes.yaml",
         "/home/christofer/PycharmProjects/computerVision/yolov5",
-        num_split
+        num_split,
+        starting_split=2
     )

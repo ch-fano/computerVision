@@ -18,8 +18,9 @@ def data_augmentation(img_path, label_path):
         A.HorizontalFlip(p=0.5),
         A.RandomBrightnessContrast(p=0.2),
         A.GaussianBlur(blur_limit=(3, 7), p=0.5),
-        A.Equalize(always_apply=True, p=1.0),
-        A.Rotate(limit=(-5, 5), p=0.5),
+        #A.Equalize(always_apply=True, p=1.0),
+        A.CLAHE(clip_limit=2.0, tile_grid_size=(8, 8), p=1, always_apply=True),
+        A.Rotate(limit=(-10, 10), p=0.5),
         A.Sharpen(alpha=(0.2, 0.5), lightness=(0.5, 1.0), p=0.5)
     ], bbox_params=A.BboxParams(format='yolo', label_fields=['category_ids']))
 

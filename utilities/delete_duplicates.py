@@ -24,10 +24,14 @@ def delete_duplicates(src_dir, dpl_dir):
 
 if __name__ == "__main__":
     src_directories = [
-
+        '/home/christofer/Desktop/copy_esxtraction_2/1_strada_buca/',
+        '/home/christofer/Desktop/copy_esxtraction_2/22_strada_al_buio/',
+        '/home/christofer/Desktop/copy_esxtraction_2/159_rifiuti_abbandonati/',
     ]
     duplicates_directories = [
-
+        '/home/christofer/Desktop/extraction/1/',
+        '/home/christofer/Desktop/extraction/22/',
+        '/home/christofer/Desktop/extraction/159/'
     ]
 
     for i in range(len(src_directories)):

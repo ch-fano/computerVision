@@ -220,7 +220,7 @@ if __name__ == '__main__':
         '156_siringa_abbandonata',
         '159_rifiuti_abbandonati'
     ]
-    p_filename = 'brightness.pickle'
+    p_filename = 'files/brightness.pickle'
     threshold = 0.30
 
     # test_classes_threshold(base_folder_name, subdir_l, threshold)

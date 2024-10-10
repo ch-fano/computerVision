@@ -17,6 +17,8 @@ def get_best_class(probabilities):
         if len(best) == 0 or elem[1] > best[1]:
             best = elem
 
+    if len(best) != 0:
+        print(best[1])
     # Return class name and with the best confidence
     return best
 
@@ -31,10 +33,10 @@ def yolo_detection(img_path):
     """
     
     # Insert the path to the yolov5 directory
-    model_dir = '/yolov5'
+    model_dir = '/home/christofer/PycharmProjects/computerVision/yolov5'
 
     # Insert the path to the custom weights
-    custom_weights = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/exp24/weights/best.pt'
+    custom_weights = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/3C_80E_DA_3_2_MAX/weights/best.pt'
 
     model = torch.hub.load(model_dir,'custom', source='local', path=custom_weights, force_reload=True)
     model.conf = 0.25  # confidence threshold
@@ -130,11 +132,9 @@ def recognition_pipeline(image_path):
     if illumination_prob:
         classes.append(['illuminazione_brightness', illumination_prob])
 
-    if illumination_prob <= 0.50:
-        label = yolo_detection(image_path)
-
-        if len(label) != 0:
-            classes.append(label)
+    labels = yolo_detection(image_path)
+    if len(labels) != 0:
+        classes.append(labels)
 
     return get_best_class(classes), classes
 
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     valid_image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif']
 
-    test_dir = ''
+    test_dir = '/home/christofer/Desktop/second_images/159_rifiuti_abbandonati'
     dir_classes = {'undefined': 0}
     tot_imgs = 0
 

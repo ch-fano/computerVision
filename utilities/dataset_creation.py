@@ -133,17 +133,22 @@ def split_dataset(tmp_folder_path, dataset_name, augment=False, recursive=False)
         apply_data_augmentation(os.path.join(os.getcwd(), dataset_name), recursive)
 
 
-def apply_data_augmentation(dir_name, recursive=False):
+def apply_data_augmentation(dir_name, recursive=False, cross=False):
     """
     This function apply data augmentation to the train set of the specified directory
 
     :param dir_name: The directory to apply data augmentation.
-    :param recursive: If 'True' it applies the data augmentation also on the images already augmented .
+    :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
+    :param cross: Temporary param to integrate the cross validation.
     """
 
     print('---- Starting the data augmentation ----')
-    images_dir = os.path.join(dir_name, 'images', 'train')
-    labels_dir = os.path.join(dir_name, 'labels', 'train')
+    if not cross:
+        images_dir = os.path.join(dir_name, 'images', 'train')
+        labels_dir = os.path.join(dir_name, 'labels', 'train')
+    else:
+        images_dir = os.path.join(dir_name, 'train', 'images')
+        labels_dir = os.path.join(dir_name, 'train', 'labels')
 
     class_instances = {}
     class_images = {}
@@ -159,8 +164,11 @@ def apply_data_augmentation(dir_name, recursive=False):
 
 
     augmented_images = 0
-    tot_instances = max(class_instances.values()) + min(class_instances.values())
+    tot_instances = 3 * max(class_instances.values()) // 2 #+ min(class_instances.values())
 
+    print("Classes before the data augmentation: ")
+    for class_id, num_instances in class_instances.items():
+        print(f"\t- Class {class_id}: {num_instances} images")
 
     for class_id, images in class_images.items():
 
@@ -179,7 +187,10 @@ def apply_data_augmentation(dir_name, recursive=False):
             if recursive:
                 images.append(os.path.basename(new_img_path))
 
-    print(f'---- Finished data augmentation: augmented {augmented_images} images ----')
+    print(f'---- Finished data augmentation ----')
+    print(f'Augmentation info:\n'
+          f'\t- Augmented images:{augmented_images}\n'
+          f'\t- Images for each class: {tot_instances}')
 
 
 def create_dataset(dir_path, subdir_list, tmp_folder_name, delete_dir=False):
@@ -255,19 +266,19 @@ def setup_dataset(base_dir, subdir_list, dataset_name='datasets', temp_dir='temp
     split_dataset(os.path.join(os.getcwd(), temp_dir), dataset_name, augment, recursive)
 
 if __name__ == '__main__':
-    #base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
-    #subdir_l = ['1_strada_buca',
-    #            '4_semaforo_non_funzionante',
-    #            '11_segnaletica_danneggiata',
-    #            '14_graffiti',
-    #            '20_veicolo_abbandonato',
-    #            '21_bicicletta_abbandonata',
-    #            '22_strada_al_buio',
-    #            '27_deiezioni_canine',
-    #            '156_siringa_abbandonata',
-    #            '159_rifiuti_abbandonati']  # Add your subdir
+    base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
+    subdir_l = ['1_strada_buca',
+                '4_semaforo_non_funzionante',
+                '11_segnaletica_danneggiata',
+                '14_graffiti',
+                '20_veicolo_abbandonato',
+                '21_bicicletta_abbandonata',
+                '22_strada_al_buio',
+                '27_deiezioni_canine',
+                '156_siringa_abbandonata',
+                '159_rifiuti_abbandonati']  # Add your subdir
 
-    base_img_folder_path = '/home/christofer/Desktop/first_images/'
-    subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
+    #base_img_folder_path = '/home/christofer/Desktop/first_images/'
+    #subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
 
     setup_dataset(base_img_folder_path, subdir_l)

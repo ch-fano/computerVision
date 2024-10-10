@@ -49,7 +49,7 @@ def test_k_fold(dataset_path, yaml_file, ksplit):
 if __name__ == '__main__':
 
     dataset_path = "/home/christofer/PycharmProjects/computerVision/datasets"
-    yaml_file = "/home/christofer/PycharmProjects/computerVision/yolov5/data/comunichiamo.yaml"
+    yaml_file = "/yolov5/data/comunichiamo_10_classes.yaml"
     ksplit = 5
 
     test_k_fold(dataset_path, yaml_file, ksplit)
