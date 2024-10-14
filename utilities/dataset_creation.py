@@ -172,6 +172,10 @@ def apply_data_augmentation(dir_name, recursive=False, cross=False):
 
     for class_id, images in class_images.items():
 
+        change_brightness = True
+        if class_id == '22':
+            change_brightness = False
+
         # Create new images to have the same number of pictures for each category
         while class_instances[class_id] < tot_instances:
             augmented_images += 1
@@ -180,7 +184,8 @@ def apply_data_augmentation(dir_name, recursive=False, cross=False):
 
             new_img_path = data_augmentation(
                 os.path.join(images_dir, img_name),
-                os.path.join(labels_dir, label_name)
+                os.path.join(labels_dir, label_name),
+                change_brightness=change_brightness
             )
 
             class_instances[class_id] += 1
@@ -266,19 +271,19 @@ def setup_dataset(base_dir, subdir_list, dataset_name='datasets', temp_dir='temp
     split_dataset(os.path.join(os.getcwd(), temp_dir), dataset_name, augment, recursive)
 
 if __name__ == '__main__':
-    base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
-    subdir_l = ['1_strada_buca',
-                '4_semaforo_non_funzionante',
-                '11_segnaletica_danneggiata',
-                '14_graffiti',
-                '20_veicolo_abbandonato',
-                '21_bicicletta_abbandonata',
-                '22_strada_al_buio',
-                '27_deiezioni_canine',
-                '156_siringa_abbandonata',
-                '159_rifiuti_abbandonati']  # Add your subdir
+    #base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
+    #subdir_l = ['1_strada_buca',
+    #            '4_semaforo_non_funzionante',
+     #           '11_segnaletica_danneggiata',
+      #          '14_graffiti',
+       #         '20_veicolo_abbandonato',
+        #        '21_bicicletta_abbandonata',
+         #       '22_strada_al_buio',
+          #      '27_deiezioni_canine',
+           #     '156_siringa_abbandonata',
+            #    '159_rifiuti_abbandonati']  # Add your subdir
 
-    #base_img_folder_path = '/home/christofer/Desktop/first_images/'
-    #subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
+    base_img_folder_path = '/home/christofer/Desktop/images/first_images/'
+    subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
 
-    setup_dataset(base_img_folder_path, subdir_l)
+    setup_dataset(base_img_folder_path, subdir_l, augment=True, recursive=True)

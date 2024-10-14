@@ -5,11 +5,14 @@ import cv2
 class RecognitionPipeline:
     def __init__(self, yolov5_dir, custom_weights):
         print("Initializing the yolov5 model of the recognition pipeline")
+
         self.model = torch.hub.load(yolov5_dir, 'custom', source='local', path=custom_weights, force_reload=True)
         self.model.conf = 0.01  # confidence threshold (before was 0.25)
         self.model.iou = 0.45  # IoU threshold
         self.model.classes = None  # filter by class
         self.model.img_size = 640  # set image size to 640x640 pixels
+
+        self.classes_dict = self.model.names
 
     def yolo_detection(self, img_path):
         """

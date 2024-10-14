@@ -39,14 +39,10 @@ def test_best_class(rp, directory_path):
         print(f'- {key}: {value}')
 
 
-def test_set_classes(rp, directory_path, classes_txt, verbose=False):
+def test_set_classes(rp, directory_path, verbose=False):
     valid_image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif']
 
-    class_labels = list()
-    with open(classes_txt, 'r') as f:
-        for line in f:
-            class_labels.append(line.strip())
-
+    errors = []
     tot_imgs = 0
     correct = 0
     proposed=0
@@ -62,7 +58,7 @@ def test_set_classes(rp, directory_path, classes_txt, verbose=False):
             with open(name_ext[0]+'.txt', 'r') as f:
                 for line in f:
                     class_id = int(line.split()[0])
-                    true_classes.add(class_labels[class_id])
+                    true_classes.add(rp.classes_dict[class_id])
 
             print(f"Processing image: {full_path}")
             tot_imgs += 1
@@ -79,6 +75,8 @@ def test_set_classes(rp, directory_path, classes_txt, verbose=False):
 
             if recognized:
                 correct += 1
+            else:
+                errors.append(full_path)
 
             if verbose:
                 print("- True classes: ", end=" ")
@@ -91,18 +89,24 @@ def test_set_classes(rp, directory_path, classes_txt, verbose=False):
         #else:
         #    print(f"\nSkipping non-image file: {full_path}")
 
-    print(f'\n\nTotal images: {tot_imgs}')
+
+    print('\n\n---------------------------------------------')
+    print(f'Total images: {tot_imgs}')
     print(f'Correct predictions: {correct}')
-    print(f'Total number of classes: {len(class_labels)}')
+    print('---------------------------------------------')
+    print(f'Total number of classes: {len(rp.classes_dict)}')
     print(f'Average number of proposed predictions: {proposed/tot_imgs}')
+    print('---------------------------------------------')
+    print('Images with an error in the recognition:')
+    for image_path in errors:
+        print(image_path)
 
 
 if __name__ == '__main__':
 
     yolov5_dir = '/home/christofer/PycharmProjects/computerVision/yolov5'
-    weights_path = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/10C_40E_DA_3_2_MAX/weights/best.pt'
-    rp = RecognitionPipeline(yolov5_dir=yolov5_dir, custom_weights=weights_path)
+    weights_path = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/10C_40E_DA/weights/best.pt'
+    test_path = '/home/christofer/Desktop/test'
 
-    dir_path = '/home/christofer/Desktop/test'
-    class_file = '/home/christofer/PycharmProjects/computerVision/classes.txt'
-    test_set_classes(rp, dir_path, class_file, verbose=True)
+    rp = RecognitionPipeline(yolov5_dir=yolov5_dir, custom_weights=weights_path)
+    test_set_classes(rp, test_path, verbose=True)

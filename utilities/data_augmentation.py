@@ -3,26 +3,31 @@ import cv2
 import os
 
 
-def data_augmentation(img_path, label_path):
+def data_augmentation(img_path, label_path, change_brightness=True):
     """
     This function applies data augmentation to the specified image preserving the label correctness.
 
     :param img_path: The path to the image to augment.
     :param label_path: The path to the label of the image to augment.
+    :param change_brightness: Whether to change the brightness of the image or not.
     :return:
     """
 
     data_augmentation.counter = getattr(data_augmentation, 'counter', 0) + 1
 
-    transform = A.Compose([
+    transformation_list = [
         A.HorizontalFlip(p=0.5),
-        A.RandomBrightnessContrast(p=0.2),
         A.GaussianBlur(blur_limit=(3, 7), p=0.5),
         #A.Equalize(always_apply=True, p=1.0),
-        A.CLAHE(clip_limit=2.0, tile_grid_size=(8, 8), p=1, always_apply=True),
         A.Rotate(limit=(-10, 10), p=0.5),
         A.Sharpen(alpha=(0.2, 0.5), lightness=(0.5, 1.0), p=0.5)
-    ], bbox_params=A.BboxParams(format='yolo', label_fields=['category_ids']))
+    ]
+
+    if change_brightness:
+        transformation_list.append(A.RandomBrightnessContrast(p=0.2))
+        transformation_list.append(A.CLAHE(clip_limit=2.0, tile_grid_size=(8, 8), p=1, always_apply=True))
+
+    transform = A.Compose(transformation_list, bbox_params=A.BboxParams(format='yolo', label_fields=['category_ids']))
 
     image = cv2.imread(img_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
