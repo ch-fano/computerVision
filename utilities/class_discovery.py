@@ -39,16 +39,25 @@ def test_best_class(rp, directory_path):
         print(f'- {key}: {value}')
 
 
-def test_set_classes(rp, directory_path, verbose=False):
+def test_set_classes(rp, test_dir, verbose=False):
+    """
+    This function is used to compute the accuracy of a model using a test directory which contains images and
+    the corresponding annotations. For each image the pipeline returns a set of classes, the prediction is
+    correct if the predicted classes set contains the true classes of the image written in the annotation.
+
+    :param rp: The instance of the recognition pipeline to use.
+    :param test_dir: The directory to test, which contains images and annotations.
+    :param verbose: If true it prints more information about the recognition.
+    """
     valid_image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif']
 
     errors = []
     tot_imgs = 0
     correct = 0
     proposed=0
-    for image_path in os.listdir(directory_path):
+    for image_path in os.listdir(test_dir):
 
-        full_path = os.path.join(directory_path, image_path)
+        full_path = os.path.join(test_dir, image_path)
         name_ext = os.path.splitext(full_path)
         true_classes = set()
 
