@@ -19,6 +19,7 @@ def data_augmentation(img_path, label_path, change_brightness=True):
         A.HorizontalFlip(p=0.5),
         A.GaussianBlur(blur_limit=(3, 7), p=0.5),
         #A.Equalize(always_apply=True, p=1.0),
+        A.RandomResizedCrop(height=640, width=640, scale=(0.8, 1), p=0.5),  # Zoom in/out
         A.Rotate(limit=(-10, 10), p=0.5),
         A.Sharpen(alpha=(0.2, 0.5), lightness=(0.5, 1.0), p=0.5)
     ]
