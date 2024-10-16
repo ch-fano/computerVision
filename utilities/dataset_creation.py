@@ -33,10 +33,12 @@ def move_files_to_folder(list_of_files, destination_folder):
             print(f'Error: {e}')
             print(f'File which caused the error: {f}')
 
-def create_dataset_folders(dataset_name):
+def create_dataset_folders(dataset_name, create_test_set=True):
     """
     This function creates the dataset folders of the images and labels.
+
     :param dataset_name: The name of the dataset to create.
+    :param create_test_set: If 'True' the test set is created.
     """
 
     # Create the datasets directory
@@ -50,8 +52,12 @@ def create_dataset_folders(dataset_name):
     os.mkdir(parent_dir_images)
     os.mkdir(parent_dir_labels)
 
+    sets = ['train', 'val']
+    if create_test_set:
+        sets.append('test')
+
     # Create the subdirectories
-    for new_dir in ['train', 'val', 'test']:
+    for new_dir in sets:
         # Create directory for images
         path = os.path.join(parent_dir_images, new_dir)
         os.mkdir(path)
@@ -77,15 +83,19 @@ def remove_dataset_folders(dir_list):
     print('---- Removed old folders ----')
 
 
-def split_dataset(tmp_folder_path, dataset_name, augment=False, recursive=False):
+def split_dataset(tmp_folder_path, dataset_name, create_test_set=True, augment=False, recursive=False):
     """
     This function randomly splits the dataset of images and labels into train, test and validation sets.
 
     :param tmp_folder_path: The temporary folder which contains the images to  split.
     :param dataset_name: The name of the directory which will contain the splits.
+    :param create_test_set: If 'True' it creates also the test set.
     :param augment: If 'True' it applies the data augmentation on the train set.
     :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
     """
+
+    # Create the train, val and test sets
+    create_dataset_folders(dataset_name, create_test_set)
 
     # Read images and annotations
     images = []
@@ -111,20 +121,21 @@ def split_dataset(tmp_folder_path, dataset_name, augment=False, recursive=False)
     train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations,
                                                                                     test_size=0.2,
                                                                                     random_state=random_seed)
+    if create_test_set:
+        # divides the previous validation set into test and validation
+        val_images, test_images, val_annotations, test_annotations = train_test_split(val_images, val_annotations,
+                                                                                      test_size=0.5,
+                                                                                      random_state=random_seed)
 
-    # divides the previous validation set into test and validation
-    val_images, test_images, val_annotations, test_annotations = train_test_split(val_images, val_annotations,
-                                                                                  test_size=0.5,
-                                                                                  random_state=random_seed)
-    create_dataset_folders(dataset_name)
+        # Move the test images into the folder
+        move_files_to_folder(test_images, os.path.join(os.getcwd(), dataset_name, 'images', 'test'))
+        move_files_to_folder(test_annotations, os.path.join(os.getcwd(), dataset_name, 'labels', 'test'))
 
-    # Move the splits into their folders
+    # Move the train and val splits into their folders
     move_files_to_folder(train_images, os.path.join(os.getcwd(), dataset_name, 'images', 'train'))
     move_files_to_folder(val_images, os.path.join(os.getcwd(), dataset_name, 'images', 'val'))
-    move_files_to_folder(test_images, os.path.join(os.getcwd(), dataset_name, 'images', 'test'))
     move_files_to_folder(train_annotations, os.path.join(os.getcwd(), dataset_name, 'labels', 'train'))
     move_files_to_folder(val_annotations, os.path.join(os.getcwd(), dataset_name, 'labels', 'val'))
-    move_files_to_folder(test_annotations, os.path.join(os.getcwd(), dataset_name, 'labels', 'test'))
 
     remove_dataset_folders([tmp_folder_path])
     print('---- Dataset successfully splitted ----')
@@ -228,7 +239,8 @@ def create_dataset(dir_path, subdir_list, tmp_folder_name, delete_dir=False):
 
     print('---- Created the dataset ----')
 
-def setup_dataset(base_dir, subdir_list, dataset_name='datasets', temp_dir='temp_folder', augment=False, recursive=False):
+def setup_dataset(base_dir, subdir_list, dataset_name='datasets', temp_dir='temp_folder',
+                  create_test_set=True, augment=False, recursive=False):
     """
     This functions setups the dataset for the training of the model, you can
 
@@ -252,6 +264,7 @@ def setup_dataset(base_dir, subdir_list, dataset_name='datasets', temp_dir='temp
     :param dataset_name: The name to assign to the dataset directory which will be created.
     :param temp_dir: The name of the temporary folder that will serve as a local copy of the `base_dir`. This folder
                      is created to work on the images without modifying the original `base_dir`.
+    :param create_test_set: If 'True' the test set is created during the splitting of the dataset.
     :param augment: If 'True' it applies the data augmentation on the train set.
     :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
     """
@@ -268,7 +281,7 @@ def setup_dataset(base_dir, subdir_list, dataset_name='datasets', temp_dir='temp
     create_dataset(os.path.join(os.getcwd(), base_dir_copy), subdir_list, temp_dir, delete_dir=True)
 
     # Divide the dataset into train, test and validation
-    split_dataset(os.path.join(os.getcwd(), temp_dir), dataset_name, augment, recursive)
+    split_dataset(os.path.join(os.getcwd(), temp_dir), dataset_name, create_test_set, augment, recursive)
 
 if __name__ == '__main__':
     #base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
@@ -286,4 +299,4 @@ if __name__ == '__main__':
     base_img_folder_path = '/home/christofer/Desktop/images/first_images/'
     subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
 
-    setup_dataset(base_img_folder_path, subdir_l, augment=True, recursive=True)
+    setup_dataset(base_img_folder_path, subdir_l, create_test_set=False, augment=True, recursive=True)
