@@ -1,9 +1,9 @@
 import numpy as np
 import pickle
 import os
-
+from recognition_pipeline import RecognitionPipeline as rp
 from tqdm import tqdm
-from utilities.class_discovery import get_brightness
+
 import matplotlib.pyplot as plt
 
 
@@ -13,7 +13,7 @@ def extract_images(class_path):
     that have common image file extensions.
 
     :param class_path: The directory to search for image files.
-    :return: A list of full paths to all image files in the dir.ectory
+    :return: A list of full paths to all image files in the directory.
     """
 
     valid_image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif']
@@ -42,7 +42,7 @@ def get_class_brightness(class_path):
 
     # evaluate the brightness
     for img in tqdm(imgs, desc="Evaluating the class brightness"):
-        brightness.append(get_brightness(img))
+        brightness.append(rp.get_brightness(img))
 
     print(brightness)
     print('Min: ', min(brightness))
@@ -68,7 +68,7 @@ def test_class_threshold(class_path, threshold):
     print('Testing the threshold ' + str(threshold) + '...')
 
     for img in tqdm(imgs, desc="Testing the class images"):
-        brightness = get_brightness(img)
+        brightness = rp.get_brightness(img)
 
         if brightness <= threshold:
             passed_elem += 1
@@ -127,7 +127,7 @@ def create_brightness_pickle(base_dir, classes_subdir_list, illumination_path_di
 
     imgs = extract_images(illumination_path_dir)
     for img in tqdm(imgs, desc="Computing the class images' brightness"):
-        brightness_dict['illumination'].append(get_brightness(img))
+        brightness_dict['illumination'].append(rp.get_brightness(img))
 
 
     # Extract the other classes brightness
@@ -137,7 +137,7 @@ def create_brightness_pickle(base_dir, classes_subdir_list, illumination_path_di
 
         imgs = extract_images(os.path.join(base_dir, subdir))
         for img in tqdm(imgs, desc="Computing the class images' brightness"):
-            brightness_dict['other_classes'].append(get_brightness(img))
+            brightness_dict['other_classes'].append(rp.get_brightness(img))
 
     print('Creating pickle file...')
     with open(pickle_filename, 'wb') as f:
