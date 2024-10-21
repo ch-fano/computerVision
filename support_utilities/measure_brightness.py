@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 import os
-from recognition_pipeline import RecognitionPipeline as rp
+from pipeline_utilities.recognition_pipeline import RecognitionPipeline as rp
 from tqdm import tqdm
 
 import matplotlib.pyplot as plt

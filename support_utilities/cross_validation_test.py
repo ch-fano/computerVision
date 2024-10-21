@@ -1,9 +1,16 @@
-from cross_validation import create_k_fold
+from pipeline_utilities.cross_validation import create_k_fold
 from pathlib import Path
 import datetime
 import os
 
 def check_matches(dir_path):
+    """
+    This function checks that every image in the images directory has an annotation in the labels directory.
+    It also prints the images and annotations with zero matches.
+
+    :param dir_path: The path to the directory which contains the images and labels folder.
+    """
+
     images = []
     for img in os.listdir(dir_path / "images"):
         images.append(img)
@@ -30,6 +37,14 @@ def check_matches(dir_path):
 
 
 def test_k_fold(dataset_path, yaml_file, ksplit):
+    """
+    This function checks that every split creating during the cross validation contains a match between the images and
+    labels of both the train and validation set.
+
+    :param dataset_path: The path to the directory on which the cross validation folder is created.
+    :param yaml_file: The yaml_file used in the creation of the cross validation folder.
+    :param ksplit: The number of splits to create.
+    """
     create_k_fold(dataset_path, yaml_file, ksplit)
 
     base_path = Path(Path(dataset_path) / f"{datetime.date.today().isoformat()}_{ksplit}-Fold_Cross-val")

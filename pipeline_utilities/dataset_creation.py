@@ -284,19 +284,19 @@ def setup_dataset(base_dir, subdir_list, dataset_name='datasets', temp_dir='temp
     split_dataset(os.path.join(os.getcwd(), temp_dir), dataset_name, create_test_set, augment, recursive)
 
 if __name__ == '__main__':
-    #base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
-    #subdir_l = ['1_strada_buca',
-    #            '4_semaforo_non_funzionante',
-     #           '11_segnaletica_danneggiata',
-      #          '14_graffiti',
-       #         '20_veicolo_abbandonato',
-        #        '21_bicicletta_abbandonata',
-         #       '22_strada_al_buio',
-          #      '27_deiezioni_canine',
-           #     '156_siringa_abbandonata',
-            #    '159_rifiuti_abbandonati']  # Add your subdir
+    base_img_folder_path = '/home/christofer/Desktop/cv_images'  # Your path to the photo
+    subdir_l = ['1_strada_buca',
+                '4_semaforo_non_funzionante',
+                '11_segnaletica_danneggiata',
+                '14_graffiti',
+                '20_veicolo_abbandonato',
+                '21_bicicletta_abbandonata',
+                '22_strada_al_buio',
+                '27_deiezioni_canine',
+                '156_siringa_abbandonata',
+                '159_rifiuti_abbandonati']  # Add your subdir
 
-    base_img_folder_path = '/home/christofer/Desktop/images/first_images/'
-    subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
+    #base_img_folder_path = '/home/christofer/Desktop/images/first_images/'
+    #subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
 
-    setup_dataset(base_img_folder_path, subdir_l, create_test_set=False, augment=True, recursive=True)
+    setup_dataset(base_img_folder_path, subdir_l, create_test_set=True, augment=True, recursive=True)

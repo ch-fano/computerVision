@@ -228,7 +228,7 @@ if __name__ == "__main__":
     num_split = 5
 
     apply_cross_validation(
-        "/home/christofer/PycharmProjects/computerVision/datasets",
+        "/datasets",
         "/home/christofer/PycharmProjects/computerVision/yolov5/data/comunichiamo_10_classes.yaml",
         "/home/christofer/PycharmProjects/computerVision/yolov5",
         num_split,
