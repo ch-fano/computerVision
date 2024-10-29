@@ -108,6 +108,7 @@ def test_set_classes(rp, test_dir, extracting_true_classes='NAME', verbose=False
     tot_imgs = 0
     correct = 0
     proposed=0
+    prediction_distribution = {}
 
     for image_path in os.listdir(test_dir):
 
@@ -124,6 +125,8 @@ def test_set_classes(rp, test_dir, extracting_true_classes='NAME', verbose=False
             predicted_classes = rp.recognize(full_path)
             predicted_classes_name =  set([elem[0] for elem in predicted_classes])
             proposed += len(predicted_classes_name)
+            prediction_distribution[len(predicted_classes_name)] = (
+                    prediction_distribution.get(len(predicted_classes_name), 0) + 1)
 
             # Calculate if it is correct or not
             recognized = True
@@ -158,6 +161,9 @@ def test_set_classes(rp, test_dir, extracting_true_classes='NAME', verbose=False
     print('---------------------------------------------')
     print(f'Total number of classes: {len(rp.classes_dict)}')
     print(f'Average number of proposed predictions: {proposed/tot_imgs}')
+    print('Prediction distribution (proposed classes - number):')
+    for key, value in sorted(prediction_distribution.items()):
+        print(f'-{key}: {value}')
     print('---------------------------------------------')
     print('Images with an error in the recognition (name: true - predicted):')
     for error_dict in errors:
@@ -165,10 +171,12 @@ def test_set_classes(rp, test_dir, extracting_true_classes='NAME', verbose=False
 
 if __name__ == '__main__':
 
-    yolov5_dir = '/yolov5'
-    weights_path = '/yolov5/runs/train/10C_80E_DA_3_2_MAX/weights/best.pt'
+    yolov5_dir = '/home/christofer/PycharmProjects/computerVision/yolov5'
+    weights_path = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/FIN_fold_4/weights/best.pt'
     test_path = '/home/christofer/Desktop/test'
 
+
     rp = RecognitionPipeline(yolov5_dir=yolov5_dir, custom_weights=weights_path)
+    rp.set_common_classes(["buca", "rifiuti"])
     test_set_classes(rp, test_path, extracting_true_classes='ANNOTATION', verbose=True)
     #test_best_class(rp, test_path)
