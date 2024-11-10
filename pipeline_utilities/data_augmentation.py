@@ -5,12 +5,12 @@ import os
 
 def data_augmentation(img_path, label_path, change_brightness=True):
     """
-    This function applies data augmentation to the specified image preserving the label correctness.
+        This function applies data augmentation to the specified image preserving the label correctness.
 
-    :param img_path: The path to the image to augment.
-    :param label_path: The path to the label of the image to augment.
-    :param change_brightness: Whether to change the brightness of the image or not.
-    :return:
+        :param img_path: The path to the image to augment.
+        :param label_path: The path to the label of the image to augment.
+        :param change_brightness: Whether to change the brightness of the image or not.
+        :return:
     """
 
     data_augmentation.counter = getattr(data_augmentation, 'counter', 0) + 1

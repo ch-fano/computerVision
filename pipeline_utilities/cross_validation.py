@@ -13,17 +13,17 @@ from dataset_creation import apply_data_augmentation
 
 def create_k_fold(dataset_path, yaml_file_path, ksplit):
     """
-    This function setups the dataset for the cross validation, it is done by starting from a dataset divided into
-    train, val and test sets, creating a copy of it divided into ksplit folds.
+        This function setups the dataset for the cross validation, it is done by starting from a dataset divided into
+        train, val and test sets, creating a copy of it divided into ksplit folds.
 
-    :param dataset_path: The path to the dataset divided into train, val and test sets.
-    :param yaml_file_path: The path to the yaml file containing the information to train the model.
-    :param ksplit: The number of folds to split the dataset into.
+        :param dataset_path: The path to the dataset divided into train, val and test sets.
+        :param yaml_file_path: The path to the yaml file containing the information to train the model.
+        :param ksplit: The number of folds to split the dataset into.
     """
     print("Starting the splitting of the dataset...")
 
     dataset_path = Path(dataset_path)
-    labels = sorted((dataset_path / "labels").rglob("*.txt"))
+    labels = sorted((dataset_path / "labels").rglob("*.txt"))   # Extract all the labels and sort them
 
     with open(yaml_file_path, "r", encoding="utf8") as y:
         classes = yaml.safe_load(y)["names"]
@@ -119,7 +119,7 @@ def create_k_fold(dataset_path, yaml_file_path, ksplit):
             shutil.copy(image, img_to_path / image.name)
             shutil.copy(label, lbl_to_path / label.name)
 
-    # opzionale
+    # Optional
     folds_df.to_csv(save_path / "kfold_datasplit.csv")
     fold_lbl_distrb.to_csv(save_path / "kfold_label_distribution.csv")
 
@@ -128,14 +128,14 @@ def create_k_fold(dataset_path, yaml_file_path, ksplit):
 
 def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=0):
     """
-    This function applies the cross validation by training the model according to the configuration on the yaml files
-    for each fold. After the train is evaluated the performance of the model and memorized in a specific file.
+        This function applies the cross validation by training the model according to the configuration on the yaml files
+        for each fold. After the train is evaluated the performance of the model and memorized in a specific file.
 
-    :param yolov5_path: The path to the local yolov5 directory.
-    :param ksplit: The number of splits to divide the dataset into.
-    :param ds_yamls: The list containing the path to the yaml files.
-    :param starting_split: The number of the split to start with, used to restart the training from this point in case of an error
-                           or interruption during the training.
+        :param yolov5_path: The path to the local yolov5 directory.
+        :param ksplit: The number of splits to divide the dataset into.
+        :param ds_yamls: The list containing the path to the yaml files.
+        :param starting_split: The number of the split to start with, used to restart the training from this point in
+                               case of an error or interruption during the training.
     """
 
     print("Starting the cross-validation...")
@@ -151,7 +151,7 @@ def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=0):
     # Define your additional arguments here
     batch = 8
     project = yolov5_path + "/runs/train"
-    epochs = 40
+    epochs = 80
 
     for k in range(starting_split, ksplit):
         print(f"Evaluating split {k+1}/{ksplit}")
@@ -164,7 +164,7 @@ def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=0):
                   epochs=epochs,
                   batch_size=batch,
                   project=project,
-                  name=f'fold_{k}')
+                  name=f'FIN_fold_{k}')
 
         # Run validation to get metrics
         metrics = val.run(data=dataset_yaml, weights=f'{yolov5_path}/runs/train/fold_{k}/weights/best.pt', name=f"fold{k}")
@@ -182,10 +182,10 @@ def cross_validation(yolov5_path, ksplit, ds_yamls, starting_split=0):
 
 def extract_yamls(kfold_dataset_path, ksplit):
     """
-    This function is used to extract the list of yamls file from the existing dataset.
+        This function is used to extract the list of yamls file from the existing dataset.
 
-    :param kfold_dataset_path: The path to the exisiting dataset which containes the k fold division.
-    :param ksplit: The number of split contained by the dataset.
+        :param kfold_dataset_path: The path to the exisiting dataset which containes the k fold division.
+        :param ksplit: The number of split contained by the dataset.
     """
 
     print("Extracting yamls...")
@@ -199,17 +199,17 @@ def extract_yamls(kfold_dataset_path, ksplit):
 
 def apply_cross_validation(dataset_path, yaml_file_path, yolov5_path, ksplit, starting_split=0):
     """
-    This function must be called after the splitting of the dataset in train, val and test sets.
-    It setups the dataset for the cross validation and applies it memorizing the partial results on pickles files.
+        This function must be called after the splitting of the dataset in train, val and test sets.
+        It setups the dataset for the cross validation and applies it memorizing the partial results on pickles files.
 
-    :param dataset_path: The path to the dataset already split into train, val and test sets.
-    :param yaml_file_path: The path to the yaml file containing the configurations of the yolov5 model.
-    :param yolov5_path: The path to the local yolov5 directory.
-    :param ksplit: The number of splits to divide the dataset into.
-    :param starting_split: The number of the split to start with, used to restart the training from this point in case of an error
-                           or interruption during the training.
+        :param dataset_path: The path to the dataset already split into train, val and test sets.
+        :param yaml_file_path: The path to the yaml file containing the configurations of the yolov5 model.
+        :param yolov5_path: The path to the local yolov5 directory.
+        :param ksplit: The number of splits to divide the dataset into.
+        :param starting_split: The number of the split to start with, used to restart the training from this point in
+                               case of an error or interruption during the training.
     """
-    kfold_path = Path(Path(dataset_path) / f"2024-10-01_{ksplit}-Fold_Cross-val")
+    kfold_path = Path(Path(dataset_path) / f"{datetime.date.today().isoformat()}_{ksplit}-Fold_Cross-val")
 
     if kfold_path.exists():
         print("The dataset already exists, skipping creation")
@@ -228,9 +228,9 @@ if __name__ == "__main__":
     num_split = 5
 
     apply_cross_validation(
-        "/datasets",
+        "/home/christofer/PycharmProjects/computerVision/datasets",
         "/home/christofer/PycharmProjects/computerVision/yolov5/data/comunichiamo_10_classes.yaml",
         "/home/christofer/PycharmProjects/computerVision/yolov5",
         num_split,
-        starting_split=2
+        starting_split=0
     )

@@ -1,13 +1,13 @@
 import os
 from recognition_pipeline import RecognitionPipeline
 
-def test_best_class(rp, directory_path):
+def test_best_class(rp: RecognitionPipeline, directory_path):
     """
-    This function recognise the objects in the images of the directory, memorize and print only the results
-    of the class with the highest probability.
+        This function recognise the objects in the images of the directory, memorize and print only the results
+        of the class with the highest probability.
 
-    :param rp: The instance of the recognition pipeline to use.
-    :param directory_path: The path to the directory to test.
+        :param rp: The instance of the recognition pipeline to use.
+        :param directory_path: The path to the directory to test.
     """
     valid_image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif']
     dir_classes = {'undefined': 0}
@@ -41,15 +41,15 @@ def test_best_class(rp, directory_path):
 
 def extract_true_classes(img_path, classes_dict, extraction_method):
     """
-    This function extracts the true classes of the images provided according to the specified extraction method.
+        This function extracts the true classes of the images provided according to the specified extraction method.
 
-    :param img_path: The path to the image.
-    :param classes_dict: The dictionary which contains the { ID : class_name } association.
-    :param extraction_method: The method to use for the extraction of the true classes:
-        - NAME: each image has name which starts with id___, id is used as key of the db_ids dictionary to define the
-                true class of the image.
-        - ANNOTATION: search for the annotation img_name.txt and extracts the true classes from it.
-    :return: A set of the classes name for which is present an instance in the image.
+        :param img_path: The path to the image.
+        :param classes_dict: The dictionary which contains the { ID : class_name } association.
+        :param extraction_method: The method to use for the extraction of the true classes:
+            - NAME: each image has name which starts with id___, id is used as key of the db_ids dictionary to define the
+                    true class of the image.
+            - ANNOTATION: search for the annotation img_name.txt and extracts the true classes from it.
+        :return: A set of the classes name for which is present an instance in the image.
     """
 
     true_classes = set()
@@ -77,25 +77,28 @@ def extract_true_classes(img_path, classes_dict, extraction_method):
 
         img_name_path = os.path.splitext(img_path)[0]
         print(f"\n\nExtracting annotation: {img_name_path}.txt")
-        with open(img_name_path + '.txt', 'r') as f:
-            for line in f:
-                class_id = int(line.split()[0])
-                true_classes.add(classes_dict[class_id])
+        try:
+            with open(img_name_path + '.txt', 'r') as f:
+                for line in f:
+                    class_id = int(line.split()[0])
+                    true_classes.add(classes_dict[class_id])
+        except FileNotFoundError:
+            print(f"Error: The file '{img_name_path}.txt' does not exist.")
 
     else:
         raise ValueError(f"Invalid true classes extracting method: {extraction_method}")
 
     return true_classes
 
-def test_set_classes(rp, test_dir, extracting_true_classes='NAME', verbose=False):
+def test_set_classes(rp: RecognitionPipeline, test_dir, extracting_true_classes='NAME', verbose=False):
     """
-    This function is used to compute the accuracy of a model using a test directory which contains images and
-    the corresponding annotations. For each image the pipeline returns a set of classes, the prediction is
-    correct if the predicted classes set contains the true classes of the image written in the annotation.
+        This function is used to compute the accuracy of a model using a test directory which contains images and
+        the corresponding annotations. For each image the pipeline returns a set of classes, the prediction is
+        correct if the predicted classes set contains the true classes of the image written in the annotation.
 
-    :param rp: The instance of the recognition pipeline to use.
-    :param test_dir: The directory to test, which contains images and annotations.
-    :param verbose: If True it prints more information about the recognition.
+        :param rp: The instance of the recognition pipeline to use.
+        :param test_dir: The directory to test, which contains images and annotations.
+        :param verbose: If True it prints more information about the recognition.
     """
     valid_image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif']
 
@@ -122,7 +125,7 @@ def test_set_classes(rp, test_dir, extracting_true_classes='NAME', verbose=False
             print(f"Processing image: {full_path}")
             tot_imgs += 1
 
-            predicted_classes = rp.recognize(full_path)
+            predicted_classes = rp.recognize(full_path) # [['class_name', probability], [...]]
             predicted_classes_name =  set([elem[0] for elem in predicted_classes])
             proposed += len(predicted_classes_name)
             prediction_distribution[len(predicted_classes_name)] = (
@@ -172,9 +175,8 @@ def test_set_classes(rp, test_dir, extracting_true_classes='NAME', verbose=False
 if __name__ == '__main__':
 
     yolov5_dir = '/home/christofer/PycharmProjects/computerVision/yolov5'
-    weights_path = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/FIN_fold_4/weights/best.pt'
+    weights_path = '/home/christofer/PycharmProjects/computerVision/yolov5/runs/train/FIN_80E/weights/best.pt'
     test_path = '/home/christofer/Desktop/test'
-
 
     rp = RecognitionPipeline(yolov5_dir=yolov5_dir, custom_weights=weights_path)
     rp.set_common_classes(["buca", "rifiuti"])

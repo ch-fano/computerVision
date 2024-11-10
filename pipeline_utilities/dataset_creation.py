@@ -1,15 +1,17 @@
 import os
 import shutil
 import random
+from pathlib import Path
+
 from sklearn.model_selection import train_test_split
 from pipeline_utilities.data_augmentation import data_augmentation
 
 def create_local_copy(src_path, copy_dir_path):
     """
-    This function creates a local copy the specified directory in the project directory.
+        This function creates a local copy the specified directory in the project directory.
 
-    :param src_path: The directory to copy.
-    :param copy_dir_path: The path to the folder to copy the image to.
+        :param src_path: The directory to copy.
+        :param copy_dir_path: The path to the folder to copy the image to.
     """
     if os.path.isdir(src_path):
         shutil.copytree(src_path, copy_dir_path)
@@ -19,10 +21,10 @@ def create_local_copy(src_path, copy_dir_path):
 # Utility function to move images
 def move_files_to_folder(list_of_files, destination_folder):
     """
-    This function moves the specified files to the specified folder.
+        This function moves the specified files to the specified folder.
 
-    :param list_of_files: The list of files to move.
-    :param destination_folder: The destination folder.
+        :param list_of_files: The list of files to move.
+        :param destination_folder: The destination folder.
     """
     for f in list_of_files:
         try:
@@ -33,10 +35,10 @@ def move_files_to_folder(list_of_files, destination_folder):
 
 def create_dataset_folders(dataset_path, create_test_set=True):
     """
-    This function creates the dataset folders of the images and labels.
+        This function creates the dataset folders of the images and labels.
 
-    :param dataset_path: The path to the dataset to create.
-    :param create_test_set: If 'True' the test set is created.
+        :param dataset_path: The path to the dataset to create.
+        :param create_test_set: If 'True' the test set is created.
     """
 
     # Create the datasets directory
@@ -68,9 +70,9 @@ def create_dataset_folders(dataset_path, create_test_set=True):
 
 def remove_dataset_folders(dir_list):
     """
-    This function removes the specified folders in the current directory.
+        This function removes the specified folders in the current directory.
 
-    :param dir_list: The list of folders to remove.
+        :param dir_list: The list of folders to remove.
     """
 
     for d in dir_list:
@@ -82,13 +84,13 @@ def remove_dataset_folders(dir_list):
 
 def split_dataset(tmp_folder_path, dataset_path, create_test_set=True, augment=False, recursive=False):
     """
-    This function randomly splits the dataset of images and labels into train, test and validation sets.
+        This function randomly splits the dataset of images and labels into train, test and validation sets.
 
-    :param tmp_folder_path: The temporary folder which contains the images to  split.
-    :param dataset_path: The path to the directory which will contain the splits.
-    :param create_test_set: If 'True' it creates also the test set.
-    :param augment: If 'True' it applies the data augmentation on the train set.
-    :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
+        :param tmp_folder_path: The temporary folder which contains the images to  split.
+        :param dataset_path: The path to the directory which will contain the splits.
+        :param create_test_set: If 'True' it creates also the test set.
+        :param augment: If 'True' it applies the data augmentation on the train set.
+        :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
     """
 
     # Create the train, val and test sets
@@ -151,11 +153,11 @@ def split_dataset(tmp_folder_path, dataset_path, create_test_set=True, augment=F
 
 def apply_data_augmentation(dir_path, recursive=False, cross=False):
     """
-    This function apply data augmentation to the train set of the specified directory
+        This function apply data augmentation to the train set of the specified directory
 
-    :param dir_path: The path to the directory to apply data augmentation.
-    :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
-    :param cross: Temporary param to integrate the cross validation.
+        :param dir_path: The path to the directory to apply data augmentation.
+        :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
+        :param cross: Temporary param to integrate the cross validation.
     """
 
     print('---- Starting the data augmentation ----')
@@ -216,12 +218,12 @@ def apply_data_augmentation(dir_path, recursive=False, cross=False):
 
 def create_dataset(dir_path, subdir_list, tmp_folder_path, delete_dir=False):
     """
-    This function moves all the images and labels in the specified subdirectories in a unique folder.
+        This function moves all the images and labels in the specified subdirectories in a unique folder.
 
-    :param dir_path: The path to the common base directory.
-    :param subdir_list: The subdirectories with the images and labels to move.
-    :param tmp_folder_path: The path to the temporary folder on which the images have to be moved.
-    :param delete_dir: If 'True' it deletes the folder passed as dir_path.
+        :param dir_path: The path to the common base directory.
+        :param subdir_list: The subdirectories with the images and labels to move.
+        :param tmp_folder_path: The path to the temporary folder on which the images have to be moved.
+        :param delete_dir: If 'True' it deletes the folder passed as dir_path.
     """
 
     # Create the new temporary folder and move the classes.txt
@@ -231,8 +233,9 @@ def create_dataset(dir_path, subdir_list, tmp_folder_path, delete_dir=False):
     files = []
     # For each directory extract the files and create a list of them
     for subdir in subdir_list:
-        subdir_path = os.path.join(dir_path, subdir)
-        files += [os.path.join(subdir_path, f) for f in os.listdir(subdir_path) if f != 'classes.txt']
+        subdir_path = Path(dir_path, subdir)
+        if os.path.isdir(subdir_path):
+            files += [os.path.join(subdir_path, f) for f in os.listdir(subdir_path) if f != 'classes.txt']
 
     # Move the files in the temporary folder
     move_files_to_folder(files, tmp_folder_path)
@@ -245,32 +248,32 @@ def create_dataset(dir_path, subdir_list, tmp_folder_path, delete_dir=False):
 def setup_dataset(base_dir, subdir_list, new_dataset_dir=os.getcwd(), dataset_name='datasets', temp_dir='temp_folder',
                   create_test_set=True, augment=False, recursive=False):
     """
-    This functions setups the dataset for the training of the model, you can
+        This functions setups the dataset for the training of the model, you can
 
-    :param base_dir:
-            The root directory that contains the image dataset. This directory should be structured with
-            subdirectories, where each subdirectory corresponds to a specific class. The images for each
-            class are stored within their respective subdirectory. The directory structure should follow
-            the format:
+        :param base_dir:
+                The root directory that contains the image dataset. This directory should be structured with
+                subdirectories, where each subdirectory corresponds to a specific class. The images for each
+                class are stored within their respective subdirectory. The directory structure should follow
+                the format:
 
-            base_dir/
-            ├── class_1/
-            │   ├── img_1.jpg
-            │   ├── img_2.jpg
-            │   └── ...
-            ├── class_2/
-            │   ├── img_1.jpg
-            │   ├── img_2.jpg
-            │   └── ...
-            └── ...
-    :param subdir_list: The list of subdirectories containing the images and labels to use during the training.
-    :param new_dataset_dir: The path to the directory on which the dataset will be created.
-    :param dataset_name: The name to assign to the dataset directory which will be created.
-    :param temp_dir: The name of the temporary folder that will serve as a local copy of the `base_dir`. This folder
-                     is created to work on the images without modifying the original `base_dir`.
-    :param create_test_set: If 'True' the test set is created during the splitting of the dataset.
-    :param augment: If 'True' it applies the data augmentation on the train set.
-    :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
+                base_dir/
+                ├── class_1/
+                │   ├── img_1.jpg
+                │   ├── img_2.jpg
+                │   └── ...
+                ├── class_2/
+                │   ├── img_1.jpg
+                │   ├── img_2.jpg
+                │   └── ...
+                └── ...
+        :param subdir_list: The list of subdirectories containing the images and labels to use during the training.
+        :param new_dataset_dir: The path to the directory on which the dataset will be created.
+        :param dataset_name: The name to assign to the dataset directory which will be created.
+        :param temp_dir: The name of the temporary folder that will serve as a local copy of the `base_dir`. This folder
+                         is created to work on the images without modifying the original `base_dir`.
+        :param create_test_set: If 'True' the test set is created during the splitting of the dataset.
+        :param augment: If 'True' it applies the data augmentation on the train set.
+        :param recursive: If 'True' it applies the data augmentation also on the images already augmented.
     """
 
     base_dir_copy = os.path.basename(base_dir) + '_copy'
@@ -309,4 +312,4 @@ if __name__ == '__main__':
     #subdir_l = ['1_strada_buca', '22_strada_al_buio', '159_rifiuti_abbandonati']
 
     setup_dataset(base_img_folder_path, subdir_l, new_dataset_dir='/home/christofer/PycharmProjects/computerVision/',
-                  create_test_set=False, augment=True, recursive=True)
+                  create_test_set=True, augment=False, recursive=False)

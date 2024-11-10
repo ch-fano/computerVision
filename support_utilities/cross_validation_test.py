@@ -5,10 +5,10 @@ import os
 
 def check_matches(dir_path):
     """
-    This function checks that every image in the images directory has an annotation in the labels directory.
-    It also prints the images and annotations with zero matches.
+        This function checks that every image in the images directory has an annotation in the labels directory.
+        It also prints the images and annotations with zero matches.
 
-    :param dir_path: The path to the directory which contains the images and labels folder.
+        :param dir_path: The path to the directory which contains the images and labels folder.
     """
 
     images = []
@@ -38,12 +38,12 @@ def check_matches(dir_path):
 
 def test_k_fold(dataset_path, yaml_file, ksplit):
     """
-    This function checks that every split creating during the cross validation contains a match between the images and
-    labels of both the train and validation set.
+        This function checks that every split creating during the cross validation contains a match between the images and
+        labels of both the train and validation set.
 
-    :param dataset_path: The path to the directory on which the cross validation folder is created.
-    :param yaml_file: The yaml_file used in the creation of the cross validation folder.
-    :param ksplit: The number of splits to create.
+        :param dataset_path: The path to the directory on which the cross validation folder is created.
+        :param yaml_file: The yaml_file used in the creation of the cross validation folder.
+        :param ksplit: The number of splits to create.
     """
     create_k_fold(dataset_path, yaml_file, ksplit)
 

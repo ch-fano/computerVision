@@ -118,7 +118,7 @@ class RecognitionPipeline:
                      instance.
         """
 
-        classes = self.yolo_detection(image_path)
+        classes = self.yolo_detection(image_path) # [[''classe', pred]]
 
         illumination_prob = self.is_illumination(image_path, brightness_threshold)
 
