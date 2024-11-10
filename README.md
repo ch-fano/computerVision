@@ -31,7 +31,8 @@ This package is a clone of the https://github.com/ultralytics/yolov5 repository 
 The convention used for naming the trained models is as follows *ncC_neE[_DA]*:
 - *nc* represents the number of classes.
 - *ne* indicates the number of epochs.
-- *DA* is added if data augmentation has been applied. 
+- *DA* is added if data augmentation has been applied.
+  
 For example, 10C_40E indicates a model trained on 10 classes for 40 epochs.
 All these models are trained on the dataset split into training, validation and test sets using the 80-10-10 division.
 
